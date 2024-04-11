@@ -18,8 +18,13 @@ public class BookController : ControllerBase
     public IActionResult CreateBook([FromBody] Book book)
 
     {
+        ListOfBooks l = new ListOfBooks();
+        var random = new Random();
+        int id = random.Next();
+
         var response = new Book
         {
+            Id = id,
             Titulo = book.Titulo,
             Autor = book.Autor,
             Genero = book.Genero,
@@ -27,6 +32,8 @@ public class BookController : ControllerBase
             QuantidadeDeEstoque = book.QuantidadeDeEstoque,
 
         };
+        l.BookList.Add(response);
+
         return Created(string.Empty, response);
     }
 
