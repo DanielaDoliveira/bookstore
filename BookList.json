@@ -1,0 +1,23 @@
+ [
+  {
+    "Id":0,
+    "Titulo" : "O Castelo no Ar",
+    "Autor" : "Diana Wynne Jones",
+    "Genero" : "Fantasia",
+    "Preco" : 25.99,
+    "QuantidadeDeEstoque" : 10
+  
+  },
+
+    {
+    "Id":1,
+    "Titulo" : "O Castelo Animado",
+    "Autor" : "Diana Wynne Jones",
+    "Genero" : "Fantasia",
+    "Preco" : 25.99,
+    "QuantidadeDeEstoque" : 10
+  
+  }
+  
+]
+  
