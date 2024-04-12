@@ -1,6 +1,9 @@
 
+using Bookstore.Communication.Requests;
+using Bookstore.Communication.Responses;
 using Bookstore.Entities;
-
+using Bookstore.Tests;
+using Bookstore.UseCases;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bookstore.Controllers;
@@ -14,113 +17,98 @@ public class BookController : ControllerBase
 
 
     [HttpPost]
-    [ProducesResponseType(typeof(Book), StatusCodes.Status201Created)]
-    public IActionResult CreateBook([FromBody] Book book)
+    [ProducesResponseType(typeof(ResponseBookCreatedJson), StatusCodes.Status201Created)]
+    public IActionResult CreateBook([FromBody] RequestCreateBookJson request)
 
     {
-        ListOfBooks l = new ListOfBooks();
+
         var random = new Random();
         int id = random.Next();
+        var listOfBooks = new ListOfBooks();
+        var useCase = new CreateBookUseCase();
+        var test = new CreateDataTest(listOfBooks);
+        var test_list = test.VerifyCompleteListBeforeTest();
 
-        var response = new Book
-        {
-            Id = id,
-            Titulo = book.Titulo,
-            Autor = book.Autor,
-            Genero = book.Genero,
-            Preco = book.Preco,
-            QuantidadeDeEstoque = book.QuantidadeDeEstoque,
-
-        };
-        l.BookList.Add(response);
-
+        var response = useCase.Execute(request, id, listOfBooks);
+        test_list = test.VerifyIfDataCreated();
         return Created(string.Empty, response);
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(Book), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseGetAllBooksJson), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult GetAllBooks()
     {
-        var books = new ListOfBooks();
+        var useCase = new GetAllBooksUseCase();
+        var response = useCase.Execute();
 
-        var response = books.BookList;
         return Ok(response);
     }
 
 
     [HttpGet]
     [Route("{book_id}")]
-    [ProducesResponseType(typeof(Book), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseGetBooksById), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetById([FromRoute] int book_id)
     {
-        var l = new ListOfBooks();
-        var lenght = l.BookList.Count;
 
-        if (book_id >= lenght)
+        var useCase = new GetBookByIdUseCase();
+        var response = useCase.Execute(book_id);
+        if (response == null)
         {
-            return NotFound("Id não foi encontrado");
+            return NotFound("Livro não foi encontrado");
         }
         else
         {
-            var books = l.BookList[book_id];
-
-            return Ok(books);
+            return Ok(response);
         }
+
     }
 
     [HttpPut]
     [Route("{book_id}")]
-    [ProducesResponseType(typeof(Book), StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(Book), StatusCodes.Status404NotFound)]
-    public IActionResult UpdateBook([FromRoute] int book_id, [FromBody] Book bookUpdate)
+    [ProducesResponseType(typeof(ResponseUpdateBookById), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult UpdateBook([FromRoute] int book_id, [FromBody] RequestUpdateBookById request)
 
     {
-        var l = new ListOfBooks();
-        var lenght = l.BookList.Count;
-        var books = l.BookList[0];
-        if (book_id >= lenght)
+        var useCase = new UpdateBookByIdUseCase();
+        var listOfBooks = new ListOfBooks();
+        var test = new UpdateDataTest(listOfBooks);
+        var test_list = test.VerifyCompleteListBeforeTest();
+        var response = useCase.Execute(book_id, request, listOfBooks);
+
+        if (response == null)
         {
-            return NotFound("Id não foi encontrado");
+            return NotFound();
         }
         else
         {
-            books = l.BookList[book_id];
-            Console.WriteLine(books);
-            books.Titulo = bookUpdate.Titulo;
-            books.Autor = bookUpdate.Autor;
-            books.Genero = bookUpdate.Genero;
-            books.Preco = bookUpdate.Preco;
-            books.QuantidadeDeEstoque = bookUpdate.QuantidadeDeEstoque;
-
-
-        };
-        return NoContent();
+            test_list = test.VerifyIfDataUpdated();
+            return NoContent();
+        }
     }
 
     [HttpDelete]
     [Route("{book_id}")]
     [ProducesResponseType(typeof(Book), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(Book), StatusCodes.Status404NotFound)]
-    public IActionResult DeleteBook(int book_id)
+    public IActionResult DeleteBook([FromRoute] int book_id, RequestDeleteBookbyId request)
     {
+        request.Id = book_id;
         var l = new ListOfBooks();
-        var lenght = l.BookList.Count;
-        if (book_id >= lenght)
-        {
-            return NotFound("Id não foi encontrado");
-        }
-        else
-        {
+        var test = new DeleteDataTest(l);
+        var testing_list = test.VerifyCompleteListBeforeTest();
 
-            l.BookList.RemoveAt(book_id);
+        var useCase = new DeleteBookByIdUseCase();
 
-        }
+        useCase.Execute(request, l);
 
 
 
+        testing_list = test.VerifyIfObjectDeleted();
         return NoContent();
 
     }
